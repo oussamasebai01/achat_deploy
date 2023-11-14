@@ -1,76 +1,53 @@
-import {Component, OnInit} from '@angular/core';
-import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {Stock} from '../shared/Model/Stock';
-import {StockService} from '../shared/Service/Stock.service';
+import {Component} from '@angular/core';
+import {StockService} from '../services/stock.service';
+import {MatDialog} from '@angular/material/dialog';
 
 @Component({
   selector: 'app-stock',
   templateUrl: './stock.component.html',
   styleUrls: ['./stock.component.css']
 })
-export class StockComponent implements OnInit {
+export class StockComponent {
 
-  listStocks: any;
-  form: boolean = false;
-  stock!: Stock;
-  closeResult!: string;
+  data: any;
+  displayForm = false;
+  stock: any
+  formData = {
+    title: ''
+  };
 
-  constructor(private stockService: StockService, private modalService: NgbModal) {
+  constructor(private stockService: StockService, private dialog: MatDialog) {
   }
 
-  ngOnInit(): void {
-    this.getAllStockss();
-
+  ngOnInit() {
+    this.fetchData();
     this.stock = {
       idStock: null,
-      libelleStock:null,
-      qte:null,
-      qteMin:null
+      title: null
     }
   }
 
-  getAllStockss() {
-    this.stockService.getAllStocks().subscribe(res => this.listStocks = res)
-  }
-
-  addStock(p: any) {
-    this.stockService.addStock(p).subscribe(() => {
-      this.getAllStockss();
-      this.form = false;
+  fetchData() {
+    this.stockService.fetchAllData().subscribe((response) => {
+      this.data = response;
     });
   }
 
-  editStock(stock: Stock) {
-    this.stockService.editStock(stock).subscribe();
+  showForm() {
+    this.displayForm = true;
   }
 
-  deleteStock(idStock: any) {
-    this.stockService.deleteStock(idStock).subscribe(() => this.getAllStockss())
+  submitForm() {
+   // Hide the form after submission
+    this.displayForm = false;
   }
 
-  open(content: any, action: any) {
-    if (action != null)
-      this.stock = action
-    else
-      this.stock = new Stock();
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
-      this.closeResult = `Closed with: ${result}`;
-    }, (reason) => {
-      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+  addStock(stock: any) {
+    return this.stockService.addStock(stock).subscribe((response) => {
+      this.data = response;
+      this.displayForm = false;
+      this.fetchData();
     });
   }
 
-  private getDismissReason(reason: any): string {
-    if (reason === ModalDismissReasons.ESC) {
-      return 'by pressing ESC';
-    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
-      return 'by clicking on a backdrop';
-    } else {
-      return `with: ${reason}`;
-    }
-  }
-
-  cancel() {
-    this.form = false;
-  }
 }
